@@ -99,15 +99,20 @@ export const apiService = {
 
   getLogs: async () => {
   try {
-    const response = await api.get('/api/logs');
-    return response.data;
-  } catch (error) {
-    // Retry once if it fails
-    if (error.code === 'ECONNABORTED') {
-      console.log('🔄 Retrying logs request...');
-      const response = await api.get('/api/logs');
-      return response.data;
+    const response = await fetch(`${API_URL}/api/logs`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
+    
+    const data = await response.json();
+    return data;
+  } catch (error) {
     throw new Error(`Failed to fetch logs data: ${error.message}`);
   }
 },
