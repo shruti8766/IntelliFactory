@@ -88,14 +88,30 @@ export const apiService = {
   },
 
   // Get logs data
+  // getLogs: async () => {
+  //   try {
+  //     const response = await api.get('/api/logs');
+  //     return response.data;
+  //   } catch (error) {
+  //     throw new Error(`Failed to fetch logs data: ${error.message}`);
+  //   }
+  // },
+
   getLogs: async () => {
-    try {
+  try {
+    const response = await api.get('/api/logs');
+    return response.data;
+  } catch (error) {
+    // Retry once if it fails
+    if (error.code === 'ECONNABORTED') {
+      console.log('🔄 Retrying logs request...');
       const response = await api.get('/api/logs');
       return response.data;
-    } catch (error) {
-      throw new Error(`Failed to fetch logs data: ${error.message}`);
     }
-  },
+    throw new Error(`Failed to fetch logs data: ${error.message}`);
+  }
+},
+
 
   // Get system health
   getSystemHealth: async () => {
