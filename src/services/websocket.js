@@ -10,7 +10,11 @@ class WebSocketService {
     this.maxRetries = 3;
   }
 
-  connect(url = 'https://intellifactory-1.onrender.com') {
+  connect(url) {
+  if (!url) {
+    url = 'https://intellifactory-1.onrender.com';
+  }
+
     // Prevent multiple connections and limit retries
     if (this.isConnecting || (this.socket && this.socket.connected)) {
       console.log('⏳ WebSocket already connecting or connected');
