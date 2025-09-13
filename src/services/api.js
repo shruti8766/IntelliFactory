@@ -55,7 +55,8 @@
 // export default api;
 import axios from 'axios';
 
-const API_URL = 'https://intellifactory-1.onrender.com';
+const API_URL = process.env.REACT_APP_API_URL || 'https://intellifactory-1.onrender.com';
+
 // const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000';
 
 const api = axios.create({
