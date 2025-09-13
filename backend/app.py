@@ -176,25 +176,41 @@ real_time_thread.start()
 @app.route('/api/dashboard', methods=['GET'])
 def dashboard():
     try:
-        # Get dashboard data
-        anomalies = db.get_anomalies(limit=5)
-        machines = db.get_machines()
+        # Single optimized query instead of multiple calls
         readings = db.get_machine_readings(hours=24)
         
-        # FIXED: Serialize datetime objects in anomalies
-        anomalies_clean = serialize_datetime_objects(anomalies) if anomalies else []
+        if readings:
+            # Calculate metrics from existing data instead of separate calls
+            anomaly_count = sum(1 for r in readings if r.get('error_flag', False))
+            machine_ids = set(r.get('machine_id') for r in readings)
+            machine_count = len(machine_ids)
+            
+            # Get recent anomalies from readings instead of separate query
+            recent_anomalies = [
+                {
+                    "id": i,
+                    "machine_id": r['machine_id'],
+                    "timestamp": r['timestamp'].isoformat() if r['timestamp'] else None,
+                    "severity": "high" if r.get('temperature', 0) > 80 else "medium",
+                    "message": f"Temperature: {r.get('temperature', 'N/A')}°C"
+                }
+                for i, r in enumerate(readings[:5]) if r.get('error_flag', False)
+            ]
+        else:
+            anomaly_count = 0
+            machine_count = 0
+            recent_anomalies = []
         
         response_data = {
-            "anomalyCount": len(anomalies) if anomalies else 0,
-            "machineCount": len(machines) if machines else 0,
-            "recentAnomalies": anomalies_clean,  # Now properly serialized
+            "anomalyCount": anomaly_count,
+            "machineCount": machine_count,
+            "recentAnomalies": recent_anomalies,
             "temperatureData": process_temperature_data(readings) if readings else empty_chart_data("Temperature"),
             "productionData": process_production_data(readings) if readings else empty_chart_data("Production"),
-            "status": "✅ Enhanced Backend with WebSocket (FIXED!)",
+            "status": "✅ Optimized Backend",
             "timestamp": datetime.now().isoformat()
         }
         
-        print(f"📊 Dashboard: {len(anomalies or [])} anomalies, {len(machines or [])} machines")
         return jsonify(response_data)
         
     except Exception as e:
@@ -204,10 +220,45 @@ def dashboard():
             "anomalyCount": 0,
             "machineCount": 0,
             "recentAnomalies": [],
-            "temperatureData": empty_chart_data("Temperature"),
-            "productionData": empty_chart_data("Production"),
             "status": "❌ Backend Error"
-        }), 200
+        }), 500
+
+
+# @app.route('/api/dashboard', methods=['GET'])
+# def dashboard():
+#     try:
+#         # Get dashboard data
+#         anomalies = db.get_anomalies(limit=5)
+#         machines = db.get_machines()
+#         readings = db.get_machine_readings(hours=24)
+        
+#         # FIXED: Serialize datetime objects in anomalies
+#         anomalies_clean = serialize_datetime_objects(anomalies) if anomalies else []
+        
+#         response_data = {
+#             "anomalyCount": len(anomalies) if anomalies else 0,
+#             "machineCount": len(machines) if machines else 0,
+#             "recentAnomalies": anomalies_clean,  # Now properly serialized
+#             "temperatureData": process_temperature_data(readings) if readings else empty_chart_data("Temperature"),
+#             "productionData": process_production_data(readings) if readings else empty_chart_data("Production"),
+#             "status": "✅ Enhanced Backend with WebSocket (FIXED!)",
+#             "timestamp": datetime.now().isoformat()
+#         }
+        
+#         print(f"📊 Dashboard: {len(anomalies or [])} anomalies, {len(machines or [])} machines")
+#         return jsonify(response_data)
+        
+#     except Exception as e:
+#         print(f"❌ Dashboard error: {str(e)}")
+#         return jsonify({
+#             "error": str(e),
+#             "anomalyCount": 0,
+#             "machineCount": 0,
+#             "recentAnomalies": [],
+#             "temperatureData": empty_chart_data("Temperature"),
+#             "productionData": empty_chart_data("Production"),
+#             "status": "❌ Backend Error"
+#         }), 200
 
 @app.route('/api/logs', methods=['GET'])
 def get_logs():
@@ -292,6 +343,7 @@ if __name__ == '__main__':
     print("🔗 WebSocket: Real-time updates enabled")
     print("🎯 CORS: Enabled for http://localhost:3000")
     socketio.run(app, debug=True, port=5000, host='0.0.0.0')
+
 
 
 
