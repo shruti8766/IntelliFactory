@@ -61,7 +61,7 @@ const API_URL = process.env.REACT_APP_API_URL || 'https://intellifactory-1.onren
 
 const api = axios.create({
   baseURL: API_URL,  // ← FIXED: Changed from API_BASE_URL to API_URL
-  timeout: 10000,
+  timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
   },
