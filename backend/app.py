@@ -19,7 +19,7 @@ socketio = SocketIO(app,
 # CORS(app, origins=["http://localhost:3000"])
 # socketio = SocketIO(app, cors_allowed_origins=["http://localhost:3000"], async_mode='eventlet')
 
-#db = DBHelper()
+db = DBHelper()
 
 # Store connected clients
 connected_clients = set()
@@ -291,6 +291,7 @@ if __name__ == '__main__':
     print("🔗 WebSocket: Real-time updates enabled")
     print("🎯 CORS: Enabled for http://localhost:3000")
     socketio.run(app, debug=True, port=5000, host='0.0.0.0')
+
 
 
 
