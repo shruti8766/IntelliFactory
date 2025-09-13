@@ -1,6 +1,12 @@
 import mysql.connector
 from mysql.connector import Error
 
+# Add connection pooling to your DBHelper
+app.config['SQLALCHEMY_POOL_SIZE'] = 5
+app.config['SQLALCHEMY_MAX_OVERFLOW'] = 10
+app.config['SQLALCHEMY_POOL_TIMEOUT'] = 30
+
+
 class DBHelper:
     """Database helper class for MySQL operations."""
     
@@ -149,3 +155,4 @@ class DBHelper:
         if unique_machines:
             machines = [m['machine_id'] for m in unique_machines]
             print(f"Unique machines: {machines}")
+
